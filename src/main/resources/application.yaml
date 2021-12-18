@@ -1,0 +1,14 @@
+quarkus:
+  application:
+    name: quarkus-reactive
+    version: 1
+  datasource:
+    db-kind: mysql
+    username: quarkus-user
+    password: quarkus-password
+    reactive:
+      ~: true
+      url: mysql://localhost:3306/quarkus
+      max-size: 20
+      reconnect-attempts: 3
+      cache-prepared-statements: true
