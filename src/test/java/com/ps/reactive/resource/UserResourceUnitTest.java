@@ -28,7 +28,6 @@ class UserResourceUnitTest {
 	@InjectMock
 	UserRepository userRepository;
 
-	private Uni<List<EntityUser>> users;
 	private List<EntityUser> list;
 
 	@BeforeEach
@@ -40,12 +39,11 @@ class UserResourceUnitTest {
 		list.add(new EntityUser(3, "aaa", "bbb", "ccc", "ddd"));
 		list.add(new EntityUser(4, "aaaa", "bbbb", "cccc", "dddd"));
 
-		users = Uni.createFrom().item(list);
+		Uni<List<EntityUser>> users = Uni.createFrom().item(list);
 
 		Mockito.when(userRepository.getAll()).thenReturn(users);
 		Mockito.when(userRepository.create(Mockito.any(EntityUser.class))).thenReturn(users);
 		Mockito.when(userRepository.getOne(1)).thenReturn(Uni.createFrom().item(list.get(0)));
-		Mockito.when(userRepository.delete(4)).thenReturn(Uni.createFrom().nullItem());
 	}
 
 	@Test
@@ -133,14 +131,9 @@ class UserResourceUnitTest {
 	@Test
 	void delete() {
 		Uni<Void> voidUni = userResource.delete(1);
+		Assertions.assertNull(voidUni);
 
-		Void item = voidUni.subscribe().withSubscriber(UniAssertSubscriber.create())
-			.assertItem(null)
-			.assertCompleted()
-			.assertCompleted()
-			.getItem();
-
-		Assertions.assertNull(item);
+		Mockito.when(userRepository.delete(1)).thenReturn(Uni.createFrom().nullItem());
 
 		Mockito.verify(userRepository, Mockito.times(1)).delete(1);
 	}
@@ -165,6 +158,6 @@ class UserResourceUnitTest {
 		Assertions.assertEquals(list.get(0).getPassword(), item.getPassword());
 		Assertions.assertEquals("XXXX", item.getPassword());
 
-		Mockito.verify(userRepository,Mockito.times(1)).getOne(1);
+		Mockito.verify(userRepository, Mockito.times(1)).getOne(1);
 	}
 }
