@@ -1,7 +1,9 @@
 quarkus:
   application:
-    name: quarkus-reactive
-    version: 1
+    name: quarkus-reactive-dev
+    version: dev
+  devservices:
+    enabled: true
   datasource:
     db-kind: mysql
     username: quarkus-user

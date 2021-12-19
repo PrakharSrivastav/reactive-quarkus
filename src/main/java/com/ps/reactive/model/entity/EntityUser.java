@@ -25,6 +25,7 @@ public class EntityUser {
 		u.firstName = r.getString("firstName");
 		u.lastName = r.getString("lastName");
 		u.password = r.getString("password");
+		System.out.println(u);
 		return u;
 	}
 

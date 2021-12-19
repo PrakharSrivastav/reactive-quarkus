@@ -7,10 +7,10 @@ import io.vertx.mutiny.mysqlclient.MySQLPool;
 import io.vertx.mutiny.sqlclient.RowSet;
 import io.vertx.mutiny.sqlclient.Tuple;
 
-import javax.inject.Singleton;
+import javax.enterprise.context.ApplicationScoped;
 import java.util.List;
 
-@Singleton
+@ApplicationScoped
 public class UserRepository {
 
 	private static final String GET_ALL = "select * from user";
