@@ -130,10 +130,18 @@ class UserResourceUnitTest {
 
 	@Test
 	void delete() {
-		Uni<Void> voidUni = userResource.delete(1);
-		Assertions.assertNull(voidUni);
-
 		Mockito.when(userRepository.delete(1)).thenReturn(Uni.createFrom().nullItem());
+
+		var voidUni = userResource.delete(1);
+		Assertions.assertNotNull(voidUni);
+
+		var item = voidUni.subscribe().withSubscriber(UniAssertSubscriber.create())
+			.assertTerminated()
+			.assertCompleted()
+			.assertItem(null)
+			.getItem();
+
+		Assertions.assertNull(item);
 
 		Mockito.verify(userRepository, Mockito.times(1)).delete(1);
 	}
