@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @Path("/users")
 public class UserResource {
 
-	private UserRepository userRepository;
+	private final UserRepository userRepository;
 
 	public UserResource(UserRepository userRepository) {
 		this.userRepository = userRepository;
@@ -37,14 +37,11 @@ public class UserResource {
 	@Path("")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Uni<List<EntityUser>> create(final @Valid @ConvertGroup(to = UserValidationGroup.Add.class) User user) {
+	public Uni<EntityUser> create(final @Valid @ConvertGroup(to = UserValidationGroup.Add.class) User user) {
 		return Uni.createFrom().item(user)
 			.onItem().transform(User::toEntity)
 			.onItem().transformToUni(this.userRepository::create)
-			.onItem().transform(i -> i.parallelStream()
-				.map(EntityUser::maskPassword)
-				.collect(Collectors.toList())
-			);
+			.onItem().transform(EntityUser::maskPassword);
 	}
 
 	@PUT
@@ -75,4 +72,5 @@ public class UserResource {
 		return this.userRepository.getOne(id)
 			.onItem().transform(EntityUser::maskPassword);
 	}
+
 }

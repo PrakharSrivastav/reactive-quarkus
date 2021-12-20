@@ -17,7 +17,6 @@ import javax.inject.Inject;
 import javax.validation.ValidationException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @QuarkusTest
 class UserResourceUnitTest {
@@ -42,7 +41,6 @@ class UserResourceUnitTest {
 		Uni<List<EntityUser>> users = Uni.createFrom().item(list);
 
 		Mockito.when(userRepository.getAll()).thenReturn(users);
-		Mockito.when(userRepository.create(Mockito.any(EntityUser.class))).thenReturn(users);
 		Mockito.when(userRepository.getOne(1)).thenReturn(Uni.createFrom().item(list.get(0)));
 	}
 
@@ -65,15 +63,27 @@ class UserResourceUnitTest {
 	@Test
 	@DisplayName("create new user")
 	void create() {
-		var u = new User(0, "aaaaa", "bbbbb", "cccccc@c.com", "ddddd");
-		Uni<List<EntityUser>> listUni = userResource.create(u);
 
-		listUni.subscribe().withSubscriber(UniAssertSubscriber.create())
+		var u = new User(0, "aaaaa", "bbbbb", "cccccc@c.com", "ddddd");
+		var maskedUser = EntityUser.maskPassword(u.toEntity());
+
+		Mockito.when(userRepository.create(Mockito.any(EntityUser.class)))
+			.thenReturn(Uni.createFrom().item(u.toEntity()));
+
+		Uni<EntityUser> listUni = userResource.create(u);
+
+		var item = listUni.subscribe()
+			.withSubscriber(UniAssertSubscriber.create())
 			.assertTerminated()
 			.assertCompleted()
-			.assertItem(this.list)
-			.getItem()
-			.forEach(i -> Assertions.assertTrue(list.contains(i)));
+			.assertItem(maskedUser)
+			.getItem();
+
+		Assertions.assertEquals(maskedUser.getEmail(), item.getEmail());
+		Assertions.assertEquals(maskedUser.getFirstName(), item.getFirstName());
+		Assertions.assertEquals(maskedUser.getLastName(), item.getLastName());
+		Assertions.assertEquals(maskedUser.getId(), item.getId());
+		Assertions.assertEquals(maskedUser.getPassword(), item.getPassword());
 
 		Mockito.verify(this.userRepository, Mockito.times(1)).create(u.toEntity());
 	}
@@ -83,7 +93,7 @@ class UserResourceUnitTest {
 	void create_bad_email() {
 		var ex = Assertions.assertThrows(ValidationException.class, () -> {
 			var u = new User(0, "aaaaa", "bbbbb", "cccccc", "ddddd");
-			Uni<List<EntityUser>> listUni = userResource.create(u);
+			userResource.create(u);
 		});
 		Assertions.assertEquals("create.user.email: Email address is invalid", ex.getMessage());
 	}
@@ -93,7 +103,7 @@ class UserResourceUnitTest {
 	void create_missing_first_name() {
 		var ex = Assertions.assertThrows(ValidationException.class, () -> {
 			var u = new User(0, "", "bbbbb", "cccccc@c.com", "ddddd");
-			Uni<List<EntityUser>> listUni = userResource.create(u);
+			userResource.create(u);
 		});
 		Assertions.assertEquals("create.user.firstName: First Name is required", ex.getMessage());
 	}
